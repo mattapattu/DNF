@@ -45,7 +45,7 @@ def f(x, threshold_f):
         `threshold_f` : sigmoidal function threshold, the values below
                         it returns 0.0
     '''
-    beta = 100.0    # slope of the sigmoidal function
+    beta = 1.0    # slope of the sigmoidal function
     if np.all(x < threshold_f):          ##### !!!!!!!!!!!!!   change from "<=" to "<"
         return x*0.0
     else:
@@ -64,9 +64,9 @@ def f(x, threshold_f):
 def w(x):      # in the shape of a Mexican hat ! ;)
     ''' convolution nucleus: difference of Gaussian '''
             #print "mqslkdfjqmslfjkmslqfjkmslqfjkmslqfjslqfjsqlfmslqfjm \n"
-    c_exc =  0.001         # amplitude of the excitation part
-    c_inh =  0.311         # amplitude of the inhibition part
-    sigma_exc = 1.0      # width of the excitation part  ! >0
+    c_exc =  1.7         # amplitude of the excitation part
+    c_inh =  20.5         # amplitude of the inhibition part
+    sigma_exc = 5.0      # width of the excitation part  ! >0
     sigma_inh = 11.0      # width of the inhibition part  ! >0
 
     return c_exc * np.exp(-x**2/(2*sigma_exc**2)) - c_inh * np.exp(-x**2/(2*sigma_inh**2))
@@ -96,13 +96,12 @@ if __name__ == '__main__':
     n = 180        # discretization of space
 #    tmax = 100       # simulation time
     dt = 0.1        # time step
-    shift = 0       # no shift of the input
     m = 0.0         # mean
     sigma = 1.0     # standard deviation
 
     #Paramètres DNF
     h = -0.8         # DNF rest threshold in the absence of an input
-    tau = 1.0        # synaptic time constant
+    tau = 2.0        # synaptic time constant
     threshold = 0.0  # sigmoid function activation threshold
 
 
@@ -118,7 +117,7 @@ if __name__ == '__main__':
 
     #Rest threshold, activation threshold and initialization of the population's potential
     H = np.ones(len(X)) * h
-    thres = np.ones(len(X)) * threshold
+    thres = np.ones(len(X),dtype=np.float128) * threshold
     #u = np.zeros(len(X))
     global u
     u = np.ones(len(X)) * h
@@ -160,6 +159,7 @@ if __name__ == '__main__':
     W_fft = fft(W)
     
     def updateDNF(inputs,u):
+       print("Updating DNF\n") 
        for i in range(0,50):
            Fu_fft = fft(f(u, threshold))  # fft pour la convolution
            L = W_fft * Fu_fft             # convolution
@@ -190,7 +190,7 @@ if __name__ == '__main__':
             #print(row)
           #  inputDict[row[0]].append([row[1],row[2]])
            if(index==0):
-               currBlock = row[0]
+               currBlock = int(row[0])
            xpos = int(row[1])-180
            size = int(row[2])
            ypos = (actual_size/size)**0.5
@@ -203,10 +203,10 @@ if __name__ == '__main__':
            
            #print("arctan is %f" % arctan)
            theta = 90-arctan
-           print("xpos is %i, size is %i,ypos is %f,distance is %f,theta is %f" % (xpos,size,ypos,d,theta))
+           print("Block-id is %s, currBlock is %i,xpos is %i, size is %i,ypos is %f,distance is %f,theta is %f" % (row[0],currBlock,xpos,size,ypos,d,theta))
            
            
-           if(row[0] == currBlock ) :    ### If i/p from same frame add to input
+           if(int(row[0]) == currBlock ) :    ### If i/p from same frame add to input
                print("Obj from same  block %i" % (int(row[0])))
                totalInput = totalInput + (100/d)* gaussian(X,mu=theta,sigma=sigma)
                #plt.plot(X, totalInput,label='input')         
@@ -218,7 +218,7 @@ if __name__ == '__main__':
                updateDNF(totalInput,u) ## update DNF with prev block
                #courseCorrect()
                sleep(0.02)   ##  wait 0.1s before processing new input block ( or new frame)
-               ++currBlock
+               currBlock = currBlock+1
                totalInput = (100/d) * gaussian(X,mu=theta,sigma=sigma)
        
         
