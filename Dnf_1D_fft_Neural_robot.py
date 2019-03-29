@@ -137,23 +137,10 @@ if __name__ == '__main__':
     #axis settings
     plt.ylim(-6,10)           # forces the min and max of y
     plt.legend()
-    
-     
-    
-    
-   
-    ### Parameters for inputs
-    ### Input to  DNF will be a Guassian shaped by the size & x-axis displacement of detected objects
-    
-
 
 # Assumption 1: All targets are of same size but at different distances #######################       
-# Assumption 2: Currently activated target will always have the largest size in pixy o/p ######
-# 3: Tracking of input is done manually - The object with largest size is assumed to be previously activated and will be tracked.    
+# Assumption 2: Currently activated target will always have the largest size in pixy o/p until target is brought ######
     
-#inputDict = defaultdict(list)
-
-#
 
     # Calculation of the fft for the convolution part
     W_fft = fft(W)
