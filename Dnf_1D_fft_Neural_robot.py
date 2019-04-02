@@ -53,6 +53,7 @@ def f(x, threshold_f):
     
     global peakOfActivation
     global xmax
+    
     xmax1,peak1 = max(enumerate(fval), key=operator.itemgetter(1))
     if(peak1 >= peakOfActivation):
         xmax, peakOfActivation = xmax1,peak1
@@ -65,7 +66,7 @@ def w(x):      # in the shape of a Mexican hat ! ;)
     ''' convolution nucleus: difference of Gaussian '''
             #print "mqslkdfjqmslfjkmslqfjkmslqfjkmslqfjslqfjsqlfmslqfjm \n"
     c_exc =  1.7         # amplitude of the excitation part
-    c_inh =  20.5         # amplitude of the inhibition part
+    c_inh =  30.5         # amplitude of the inhibition part
     sigma_exc = 5.0      # width of the excitation part  ! >0
     sigma_inh = 11.0      # width of the inhibition part  ! >0
 
