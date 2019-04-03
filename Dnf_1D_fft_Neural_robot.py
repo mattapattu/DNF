@@ -68,7 +68,7 @@ def w(x):      # in the shape of a Mexican hat ! ;)
     c_exc =  1.7         # amplitude of the excitation part
     c_inh =  30.5         # amplitude of the inhibition part
     sigma_exc = 5.0      # width of the excitation part  ! >0
-    sigma_inh = 11.0      # width of the inhibition part  ! >0
+    sigma_inh = 15.0      # width of the inhibition part  ! >0
 
     return c_exc * np.exp(-x**2/(2*sigma_exc**2)) - c_inh * np.exp(-x**2/(2*sigma_inh**2))
 
