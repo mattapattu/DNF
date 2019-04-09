@@ -12,6 +12,7 @@ import csv
 from collections import defaultdict
 from time import sleep
 import math
+import pixy.build.libpixyusb_swig.pixymodule as pmod
 
 
 
@@ -92,9 +93,9 @@ if __name__ == '__main__':
     #ion() # mode interaction on
 
     #Input Parameters
-    l = 180.0       # window length
+    l = 320.0       # window length
 
-    n = 180        # discretization of space
+    n = 320        # discretization of space
 #    tmax = 100       # simulation time
     dt = 0.1        # time step
     m = 0.0         # mean
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     u = np.ones(len(X)) * h
     
     global totalInput
-    totalInput = 0.0001*gaussian(X,mu=0,sigma=sigma)
+    totalInput = 0.0000*gaussian(X,mu=0,sigma=sigma)
     #Initialization of the figure ##¡!!!!!!!!!!!!!!!!!!! HOW TO SUPERIMPOSE SEVERAL CURVES !!!!!!!!!!
     fig = plt.figure()
     #inp1, =  plt.plot(X, input1)
@@ -167,51 +168,60 @@ if __name__ == '__main__':
     ## Correct the course by updating input to spiking neurons        
     #def courseCorrect():
         #print("New peak is at %i with activation of %f" % (xmax,peakOfActivation))
+    while(1):
+       blocks = pmod.BlockArray(100)
+       blocks = pmod.getPixyBlocks()
+       for block in blocks:
+           print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block.type, block.signature, block.x, block.y, block.width, block.height))
+           xpos = block.x-159
+           totalInput = totalInput + (block.width*block.height)/64000* gaussian(X,mu=xpos,sigma=sigma)
+       updateDNF(totalInput,u)    
         
-    with open('inputs1') as csvfile:
-        readCSV = csv.reader(csvfile, delimiter=',')
-        next(readCSV, None)   ## skip header
         
-        currBlock=0
-        actual_size = 10000
-        for index,row in enumerate(readCSV):
-            #print(row)
-          #  inputDict[row[0]].append([row[1],row[2]])
-           if(index==0):
-               currBlock = int(row[0])
-           xpos = int(row[1])-180
-           size = int(row[2])
-           ypos = (actual_size/size)**0.5
-           d = (xpos**2+ypos**2)**0.5
-#           arctan = np.arctan2(ypos,xpos)
-#           deg = arctan * (180 / np.pi)
-           arctan = math.atan2(ypos,xpos)/math.pi*180
-           
-           print("Processing row %i from  block %i" % (index,int(row[0])))
-           
-           #print("arctan is %f" % arctan)
-           theta = 90-arctan
-           print("Block-id is %s, currBlock is %i,xpos is %i, size is %i,ypos is %f,distance is %f,theta is %f" % (row[0],currBlock,xpos,size,ypos,d,theta))
-           
-           
-           if(int(row[0]) == currBlock ) :    ### If i/p from same frame add to input
-               print("Obj from same  block %i" % (int(row[0])))
-               totalInput = totalInput + (100/d)* gaussian(X,mu=theta,sigma=sigma)
-               #plt.plot(X, totalInput,label='input')         
-               #plt.show()
-               #sleep(10)
-               
-           else:
-               print("Obj from new  block %i" % (int(row[0])))
-               updateDNF(totalInput,u) ## update DNF with prev block
-               #courseCorrect()
-               sleep(0.02)   ##  wait 0.1s before processing new input block ( or new frame)
-               currBlock = currBlock+1
-               totalInput = (100/d) * gaussian(X,mu=theta,sigma=sigma)
-       
-        
-        ### Remove for actual program
-        updateDNF(totalInput,u) 
+#    with open('inputs1') as csvfile:
+#        readCSV = csv.reader(csvfile, delimiter=',')
+#        next(readCSV, None)   ## skip header
+#        
+#        currBlock=0
+#        actual_size = 10000
+#        for index,row in enumerate(readCSV):
+#            #print(row)
+#          #  inputDict[row[0]].append([row[1],row[2]])
+#           if(index==0):
+#               currBlock = int(row[0])
+#           xpos = int(row[1])-180
+#           size = int(row[2])
+#           ypos = (actual_size/size)**0.5
+#           d = (xpos**2+ypos**2)**0.5
+##           arctan = np.arctan2(ypos,xpos)
+##           deg = arctan * (180 / np.pi)
+#           arctan = math.atan2(ypos,xpos)/math.pi*180
+#           
+#           print("Processing row %i from  block %i" % (index,int(row[0])))
+#           
+#           #print("arctan is %f" % arctan)
+#           theta = 90-arctan
+#           print("Block-id is %s, currBlock is %i,xpos is %i, size is %i,ypos is %f,distance is %f,theta is %f" % (row[0],currBlock,xpos,size,ypos,d,theta))
+#           
+#           
+#           if(int(row[0]) == currBlock ) :    ### If i/p from same frame add to input
+#               print("Obj from same  block %i" % (int(row[0])))
+#               totalInput = totalInput + (100/d)* gaussian(X,mu=theta,sigma=sigma)
+#               #plt.plot(X, totalInput,label='input')         
+#               #plt.show()
+#               #sleep(10)
+#               
+#           else:
+#               print("Obj from new  block %i" % (int(row[0])))
+#               updateDNF(totalInput,u) ## update DNF with prev block
+#               #courseCorrect()
+#               sleep(0.02)   ##  wait 0.1s before processing new input block ( or new frame)
+#               currBlock = currBlock+1
+#               totalInput = (100/d) * gaussian(X,mu=theta,sigma=sigma)
+#       
+#        
+#        ### Remove for actual program
+#        updateDNF(totalInput,u) 
                
                
                
