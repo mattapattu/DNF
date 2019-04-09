@@ -13,6 +13,7 @@ from collections import defaultdict
 from time import sleep
 import math
 import pixy.build.libpixyusb_swig.pixymodule as pmod
+import pixy.build.libpixyusb_swig.pixy as pixy1
 
 
 
@@ -58,8 +59,8 @@ def f(x, threshold_f):
     xmax1,peak1 = max(enumerate(fval), key=operator.itemgetter(1))
     if(peak1 >= peakOfActivation):
         xmax, peakOfActivation = xmax1,peak1
-        xmax = xmax-90
-        print("New peak=%f thetamax=%i" % (peakOfActivation,xmax))
+        xmax = xmax-159.5
+        print("New peak=%f xmax=%i" % (peakOfActivation,xmax))
 
     return fval   
 
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     u = np.ones(len(X)) * h
     
     global totalInput
-    totalInput = 0.0000*gaussian(X,mu=0,sigma=sigma)
+    totalInput = 0.0001*gaussian(X,mu=0,sigma=sigma)
     #Initialization of the figure ##¡!!!!!!!!!!!!!!!!!!! HOW TO SUPERIMPOSE SEVERAL CURVES !!!!!!!!!!
     fig = plt.figure()
     #inp1, =  plt.plot(X, input1)
@@ -149,7 +150,7 @@ if __name__ == '__main__':
     
     def updateDNF(inputs,u):
        print("Updating DNF\n") 
-       for i in range(0,50):
+       for i in range(0,150):
            Fu_fft = fft(f(u, threshold))  # fft pour la convolution
            L = W_fft * Fu_fft             # convolution
            L = ifft(L).real
@@ -162,113 +163,25 @@ if __name__ == '__main__':
            plt.draw()
        plt.show()    
 #           draw()
-       pause(10)
+       pause(2)
 #       show()    
            
     ## Correct the course by updating input to spiking neurons        
     #def courseCorrect():
         #print("New peak is at %i with activation of %f" % (xmax,peakOfActivation))
-    while(1):
-       blocks = pmod.BlockArray(100)
-       blocks = pmod.getPixyBlocks()
-       for block in blocks:
-           print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block.type, block.signature, block.x, block.y, block.width, block.height))
-           xpos = block.x-159
-           totalInput = totalInput + (block.width*block.height)/64000* gaussian(X,mu=xpos,sigma=sigma)
-       updateDNF(totalInput,u)    
-        
-        
-#    with open('inputs1') as csvfile:
-#        readCSV = csv.reader(csvfile, delimiter=',')
-#        next(readCSV, None)   ## skip header
-#        
-#        currBlock=0
-#        actual_size = 10000
-#        for index,row in enumerate(readCSV):
-#            #print(row)
-#          #  inputDict[row[0]].append([row[1],row[2]])
-#           if(index==0):
-#               currBlock = int(row[0])
-#           xpos = int(row[1])-180
-#           size = int(row[2])
-#           ypos = (actual_size/size)**0.5
-#           d = (xpos**2+ypos**2)**0.5
-##           arctan = np.arctan2(ypos,xpos)
-##           deg = arctan * (180 / np.pi)
-#           arctan = math.atan2(ypos,xpos)/math.pi*180
-#           
-#           print("Processing row %i from  block %i" % (index,int(row[0])))
-#           
-#           #print("arctan is %f" % arctan)
-#           theta = 90-arctan
-#           print("Block-id is %s, currBlock is %i,xpos is %i, size is %i,ypos is %f,distance is %f,theta is %f" % (row[0],currBlock,xpos,size,ypos,d,theta))
-#           
-#           
-#           if(int(row[0]) == currBlock ) :    ### If i/p from same frame add to input
-#               print("Obj from same  block %i" % (int(row[0])))
-#               totalInput = totalInput + (100/d)* gaussian(X,mu=theta,sigma=sigma)
-#               #plt.plot(X, totalInput,label='input')         
-#               #plt.show()
-#               #sleep(10)
-#               
-#           else:
-#               print("Obj from new  block %i" % (int(row[0])))
-#               updateDNF(totalInput,u) ## update DNF with prev block
-#               #courseCorrect()
-#               sleep(0.02)   ##  wait 0.1s before processing new input block ( or new frame)
-#               currBlock = currBlock+1
-#               totalInput = (100/d) * gaussian(X,mu=theta,sigma=sigma)
-#       
-#        
-#        ### Remove for actual program
-#        updateDNF(totalInput,u) 
-               
-               
-               
-       
-           
-                       
-           
-   
-        
-            
-#    
 #    input1 = I0*gaussian(X, mu=m-20, sigma=sigma)
-#    input2 = 3*gaussian(X, mu=m+20, sigma=sigma)
-#    input3 = 3*gaussian(X, mu=m+40, sigma=sigma)
-#    input = input1 +input2 + input3
-
-
-
-
-         
-
-
-    #Calcul DNF
-    #for i in range(0,int(tmax/dt)):
-#    for i in range(0,100):
-#        print ("t=%.3fs \t i=%d \t x_max=%.2f \t u_max=%.2f" % ((i*dt), i, X[u.argmax()], u.max()))
-#        Fu_fft = fft(f(u, threshold))  # fft pour la convolution
-#        L = W_fft * Fu_fft             # convolution
-#        L = ifft(L).real
-#        if (i<10):
-#            du = dt/tau * (-u+L+H)
-#        elif (i>=10 and i<150):
-#            du = dt/tau * (-u+L+H+input)
-#            inp.set_ydata(input) # modifies the input values !
-#            input = shiftRight(input, shift)
-#        else:
-#            du = dt/tau * (-u+L+H+input2)
-#        u += du
-#        sig_act.set_ydata(f(u,threshold))
-#        act.set_ydata(u)
-#         
-#        print("peak=%f xpeak=%i" % (peakOfActivation,xmax))
-#
-#       
-#
-#        plt.draw()
-#        pause(0.1)
-#        
-
-
+#    input2 = I0*gaussian(X, mu=m+20, sigma=sigma)
+#    input = input1 + input2    
+    while(1):
+       blocks = list() 
+       blocks = pmod.getPixyBlocks()
+       #print(blocks)
+       totalInput = 0
+       if blocks is not None:
+           for block in blocks:
+               print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block[0], block[1], block[2], block[3], block[4], block[5]))
+               xpos = block[2]-159.5
+               print(xpos)
+               totalInput = totalInput + (block[4]*block[5])/300* gaussian(X,mu=xpos,sigma=sigma)
+           updateDNF(totalInput,u)    
+        
