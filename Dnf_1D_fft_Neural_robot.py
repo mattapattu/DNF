@@ -14,6 +14,7 @@ from time import sleep
 import math
 import pixy.build.libpixyusb_swig.pixymodule as pmod
 import pixy.build.libpixyusb_swig.pixy as pixy1
+from subprocess import Popen, PIPE
 
 
 
@@ -60,7 +61,7 @@ def f(x, threshold_f):
     if(peak1 >= peakOfActivation):
         xmax, peakOfActivation = xmax1,peak1
         xmax = xmax-159.5
-        print("New peak=%f xmax=%i" % (peakOfActivation,xmax))
+        #print("New peak=%f xmax=%i" % (peakOfActivation,xmax))
 
     return fval   
 
@@ -172,16 +173,29 @@ if __name__ == '__main__':
 #    input1 = I0*gaussian(X, mu=m-20, sigma=sigma)
 #    input2 = I0*gaussian(X, mu=m+20, sigma=sigma)
 #    input = input1 + input2    
+    blockcount=0    
     while(1):
        blocks = list() 
        blocks = pmod.getPixyBlocks()
        #print(blocks)
        totalInput = 0
+       blockcount = blockcount+1
        if blocks is not None:
+           count = 0
            for block in blocks:
+               count = count+1
                print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block[0], block[1], block[2], block[3], block[4], block[5]))
                xpos = block[2]-159.5
                print(xpos)
+               #print("Stopping pixy")
+               #pmod.pixyStop()
+               #time.sleep(1.0)
+               process = Popen(['pixy/src/host/snapshot',"block-"+str(blockcount)+"-frame-"+str(count),"2", str(block[4]),str(block[5]),str(block[2]),str(block[3]) ], stdout=PIPE, stderr=PIPE)
+               stdout, stderr = process.communicate()
+               print("Output:"+stdout)
+               #print("Starting pixy")
+               #pmod.pixyStart()
+               #time.sleep(0.5)
                totalInput = totalInput + (block[4]*block[5])/300* gaussian(X,mu=xpos,sigma=sigma)
            updateDNF(totalInput,u)    
         
