@@ -33,7 +33,7 @@ def f(x, threshold_f):
         `threshold_f` : seuil de la fonction sigmoidale, les valeurs en dessous
                         elle retourne 0.0
     '''
-    beta = 100.0    # pente de la fonction sigmoidale
+    beta = 1.0    # pente de la fonction sigmoidale
     if np.all(x < threshold_f):          ##### !!!!!!!!!!!!!   changement de "<=" en "<"
         return x*0.0
     else:
@@ -42,10 +42,10 @@ def f(x, threshold_f):
 def w(x):      # de la forme d'un chapeau Mexicain ! ;)
     ''' noyau de convolution : somme de deux gaussiennes '''
             #print "mqslkdfjqmslfjkmslqfjkmslqfjkmslqfjslqfjsqlfmslqfjm \n"
-    c_exc =  0.001         # amplitude de la partie excitatrice
-    c_inh =  0.1         # amplitude de la partie inhibitrice
-    sigma_exc = 1.0      # largeur de la partie excitatrice  ! >0
-    sigma_inh = 11.0      # largeur de la partie inhibitrice  ! >0
+    c_exc =  5.5         # amplitude de la partie excitatrice
+    c_inh =  3.0         # amplitude de la partie inhibitrice
+    sigma_exc = 2.0      # largeur de la partie excitatrice  ! >0
+    sigma_inh = 10.0      # largeur de la partie inhibitrice  ! >0
 
     return c_exc * np.exp(-x**2/(2*sigma_exc**2)) - c_inh * np.exp(-x**2/(2*sigma_inh**2))
 
@@ -77,8 +77,8 @@ if __name__ == '__main__':
     x_inf, x_sup, cx, dx = -l/2, +l/2, 0, l/float(n)
     X = np.arange(x_inf, x_sup, dx)
 
-    input1 = I0*gaussian(X, mu=m-20, sigma=sigma)
-    input2 = I0*gaussian(X, mu=m+20, sigma=sigma)
+    input1 = 1*gaussian(X, mu=m-20, sigma=sigma)
+    input2 = 2*gaussian(X, mu=m+20, sigma=sigma)
     input = input1 + input2
 
     #Génération du KERNEL
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     act, = plot(X, u,label = 'u')                    # activité de la population neuronal
     sig_act, = plot(X, f(u,threshold),label = 'f(u,threshold)')   # output du DNF
     thresh, = plot(X, thres,label = 'threshold')             # seuil de l'activité de la population
-    #kernel, = plot(X, W)                # kernel
+    kernel, = plot(X, W, label = 'kernel')                # kernel
     plt.legend()
 
     #réglages des axes

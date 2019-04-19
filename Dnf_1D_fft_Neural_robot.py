@@ -8,13 +8,11 @@ from numpy.fft import fft,ifft,fft2,ifft2,fftshift,ifftshift
 from inputDNF_1D import *
 from pylab import *
 import operator
-import csv
 from collections import defaultdict
 from time import sleep
-import math
 import pixy.build.libpixyusb_swig.pixymodule as pmod
 import pixy.build.libpixyusb_swig.pixy as pixy1
-from subprocess import Popen, PIPE
+from mlp import *
 
 
 
@@ -42,6 +40,27 @@ global totalInput
 peakOfActivation=0.0
 xmax = 0
 
+
+def motorResponse(inputDNFActivation):
+     # Creation layer 1 (300 neurons, each with 785 inputs) ==> HIDDEN LAYER
+    print(inputDNFActivation)
+    layer1 = NeuronLayer("weightsDNFtoMotor.txt",320,2) #784+1 bias
+
+    # Creation layer 2 (10 neurons, each with 301 inputs) ==> OUTPUT LAYER
+    layer2 = NeuronLayer("motorneuronoutput.txt",2, 2) #300+1 bias
+
+    # Combination of the two layers to form the network
+    neural_network = NeuralNetwork(layer1, layer2)
+
+    #print ("Step 1) INPUT RECOVERY")
+    # we get the entries in the.txt file
+    
+    dnfNeuronActivations = np.zeros(320)
+    neural_network.feedForward(dnfNeuronActivations)
+    neural_network.print_output()
+
+    
+
 def f(x, threshold_f):
     ''' sigmoidal function
         `x` : the matrix to be thresholded
@@ -68,10 +87,15 @@ def f(x, threshold_f):
 def w(x):      # in the shape of a Mexican hat ! ;)
     ''' convolution nucleus: difference of Gaussian '''
             #print "mqslkdfjqmslfjkmslqfjkmslqfjkmslqfjslqfjsqlfmslqfjm \n"
-    c_exc =  1.7         # amplitude of the excitation part
-    c_inh =  30.5         # amplitude of the inhibition part
-    sigma_exc = 5.0      # width of the excitation part  ! >0
-    sigma_inh = 15.0      # width of the inhibition part  ! >0
+#    c_exc =  5.0         # amplitude of the excitation part
+#    c_inh =  4.65         # amplitude of the inhibition part
+#    sigma_exc = 1.0      # width of the excitation part  ! >0
+#    sigma_inh = 30.0      # width of the inhibition part  ! >0
+            
+    c_exc =  5.0         # amplitude of the excitation part
+    c_inh =  4.0         # amplitude of the inhibition part
+    sigma_exc = 1.0      # width of the excitation part  ! >0
+    sigma_inh = 100.0      # width of the inhibition part  ! >0
 
     return c_exc * np.exp(-x**2/(2*sigma_exc**2)) - c_inh * np.exp(-x**2/(2*sigma_inh**2))
 
@@ -136,7 +160,7 @@ if __name__ == '__main__':
     act, = plt.plot(X, u,label = 'u')                    # neural population activity
     sig_act, = plt.plot(X, f(u,threshold),label = 'f(u,threshold)')   # DNF output
     thresh, = plt.plot(X, thres,label = 'threshold')             # population activity threshold
-    #kernel, = plot(X, W)                # kernel
+    kernel, = plt.plot(X, W, label = 'kernel')                # kernel
 
     #axis settings
     plt.ylim(-6,10)           # forces the min and max of y
@@ -159,7 +183,9 @@ if __name__ == '__main__':
            inp.set_ydata(inputs) # modifies the input values !
 #             input = shiftRight(input, shift)
            u += du
-           sig_act.set_ydata(f(u,threshold))
+           updatedActivation = f(u,threshold)
+           motorResponse(updatedActivation)
+           sig_act.set_ydata(updatedActivation)
            act.set_ydata(u)
            plt.draw()
        plt.show()    
@@ -186,13 +212,14 @@ if __name__ == '__main__':
                count = count+1
                print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block[0], block[1], block[2], block[3], block[4], block[5]))
                xpos = block[2]-159.5
-               print(xpos)
+#               print(xpos)
+#               process = Popen(['pixy/src/host/snapshot',"block-"+str(blockcount)+"-frame-"+str(count),"2", str(block[4]),str(block[5]),str(block[2]),str(block[3]) ], stdout=PIPE, stderr=PIPE)
+#               stdout, stderr = process.communicate()
+#               print("Output:"+stdout)
                #print("Stopping pixy")
                #pmod.pixyStop()
                #time.sleep(1.0)
-               process = Popen(['pixy/src/host/snapshot',"block-"+str(blockcount)+"-frame-"+str(count),"2", str(block[4]),str(block[5]),str(block[2]),str(block[3]) ], stdout=PIPE, stderr=PIPE)
-               stdout, stderr = process.communicate()
-               print("Output:"+stdout)
+               
                #print("Starting pixy")
                #pmod.pixyStart()
                #time.sleep(0.5)
