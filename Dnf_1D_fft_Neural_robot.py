@@ -43,11 +43,13 @@ xmax = 0
 
 def motorResponse(inputDNFActivation):
      # Creation layer 1 (300 neurons, each with 785 inputs) ==> HIDDEN LAYER
-    print(inputDNFActivation)
+    #
+    
+    #print(inputDNFActivation)
     layer1 = NeuronLayer("weightsDNFtoMotor.txt",320,2) #784+1 bias
 
     # Creation layer 2 (10 neurons, each with 301 inputs) ==> OUTPUT LAYER
-    layer2 = NeuronLayer("motorneuronoutput.txt",2, 2) #300+1 bias
+    layer2 = NeuronLayer("motorneuronoutput.txt",2, 1)#300+1 bias
 
     # Combination of the two layers to form the network
     neural_network = NeuralNetwork(layer1, layer2)
@@ -55,8 +57,7 @@ def motorResponse(inputDNFActivation):
     #print ("Step 1) INPUT RECOVERY")
     # we get the entries in the.txt file
     
-    dnfNeuronActivations = np.zeros(320)
-    neural_network.feedForward(dnfNeuronActivations)
+    neural_network.feedForward(inputDNFActivation)
     neural_network.print_output()
 
     
