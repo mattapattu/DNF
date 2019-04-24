@@ -10,9 +10,12 @@ from pylab import *
 import operator
 from collections import defaultdict
 from time import sleep
-import pixy.build.libpixyusb_swig.pixymodule as pmod
-import pixy.build.libpixyusb_swig.pixy as pixy1
+import processImage.PIXY_MLP_enregistrement as imgprocess
+#import pixy.build.libpixyusb_swig.pixy as pixy1
 from mlp import *
+import cv2
+
+
 
 
 
@@ -117,7 +120,7 @@ def w(x):      # in the shape of a Mexican hat ! ;)
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    #ion() # mode interaction on
+    plt.ion() # mode interaction on
 
     #Input Parameters
     l = 320.0       # window length
@@ -175,8 +178,8 @@ if __name__ == '__main__':
     W_fft = fft(W)
     
     def updateDNF(inputs,u):
-       print("Updating DNF\n") 
-       for i in range(0,150):
+       print("Updating DNF") 
+       for i in range(0,30):
            Fu_fft = fft(f(u, threshold))  # fft pour la convolution
            L = W_fft * Fu_fft             # convolution
            L = ifft(L).real
@@ -185,25 +188,28 @@ if __name__ == '__main__':
 #             input = shiftRight(input, shift)
            u += du
            updatedActivation = f(u,threshold)
+           #print("Waiting for motor response") 
            motorResponse(updatedActivation)
+           #print("Received motor response") 
            sig_act.set_ydata(updatedActivation)
            act.set_ydata(u)
            plt.draw()
+           #print("update plots")
        plt.show()    
+       #print("show updated plots")
 #           draw()
        pause(2)
 #       show()    
            
-    ## Correct the course by updating input to spiking neurons        
-    #def courseCorrect():
-        #print("New peak is at %i with activation of %f" % (xmax,peakOfActivation))
 #    input1 = I0*gaussian(X, mu=m-20, sigma=sigma)
 #    input2 = I0*gaussian(X, mu=m+20, sigma=sigma)
 #    input = input1 + input2    
     blockcount=0    
     while(1):
        blocks = list() 
-       blocks = pmod.getPixyBlocks()
+       #print("getting new blocks")
+       blocks = imgprocess.getPixyBlocks()
+       #print("Got new blocks")
        #print(blocks)
        totalInput = 0
        blockcount = blockcount+1
@@ -213,17 +219,20 @@ if __name__ == '__main__':
                count = count+1
                print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block[0], block[1], block[2], block[3], block[4], block[5]))
                xpos = block[2]-159.5
-#               print(xpos)
-#               process = Popen(['pixy/src/host/snapshot',"block-"+str(blockcount)+"-frame-"+str(count),"2", str(block[4]),str(block[5]),str(block[2]),str(block[3]) ], stdout=PIPE, stderr=PIPE)
-#               stdout, stderr = process.communicate()
-#               print("Output:"+stdout)
-               #print("Stopping pixy")
-               #pmod.pixyStop()
-               #time.sleep(1.0)
+               try:
+                   print("Capturing frame")
+                   frame = imgprocess.acquisition(block[2],block[3])
+                   #cv2.imshow('Test image',frame)
+                   #cv2.waitKey()
+
+               except ValueError as e:
+                   print("Exception thrown - ",e.args)
+                   
+               ## Send frame to CNN
+               ## Get response from CNN and if true, add input to totalinput
                
-               #print("Starting pixy")
-               #pmod.pixyStart()
-               #time.sleep(0.5)
+               #print("add to total input")
                totalInput = totalInput + (block[4]*block[5])/300* gaussian(X,mu=xpos,sigma=sigma)
-           updateDNF(totalInput,u)    
+           updateDNF(totalInput,u) 
+           #print("updated DNF")
         
