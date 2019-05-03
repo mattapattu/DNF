@@ -1,0 +1,12 @@
+from pyCherokeyRobot.robot2Pc.inRobotOrderProcessor import *
+
+
+def main():
+    processOrders = InRobotOrderProcessor(HOST='LR-MCSOC')
+    
+    quit()
+   
+    
+        
+if __name__ == "__main__":
+    main()

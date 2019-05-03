@@ -127,7 +127,9 @@ class NeuralNetwork():
     def print_output(self):
         print (" Output of the output layer: ")
         print ([round(x,2) for x in self.layer2.layer_output])
-
+        
+    def return_output(self):
+        return [round(x,2) for x in self.layer2.layer_output]
 
     # search for the max, display of the recognized number with percentage of
     #Recognition # (output layer)

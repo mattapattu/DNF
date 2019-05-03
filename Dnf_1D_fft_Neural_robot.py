@@ -13,7 +13,7 @@ from time import sleep
 import processImage.PIXY_MLP_enregistrement as imgprocess
 #import pixy.build.libpixyusb_swig.pixy as pixy1
 from mlp import *
-import cv2
+from robot.PyCherokeyRobot.pyCherokeyRobot.pc2Robot.ChRobot import *
 
 
 
@@ -62,6 +62,7 @@ def motorResponse(inputDNFActivation):
     
     neural_network.feedForward(inputDNFActivation)
     neural_network.print_output()
+    return neural_network.return_output()
 
     
 
@@ -147,6 +148,9 @@ if __name__ == '__main__':
     W = w(X)
     #print len(W)
 
+    ### Start the robot
+    #robot = ChRobot(HOST="raspberrypi.local")
+    
     #Rest threshold, activation threshold and initialization of the population's potential
     H = np.ones(len(X)) * h
     thres = np.ones(len(X),dtype=np.float128) * threshold
@@ -189,7 +193,12 @@ if __name__ == '__main__':
            u += du
            updatedActivation = f(u,threshold)
            #print("Waiting for motor response") 
-           motorResponse(updatedActivation)
+           resp = motorResponse(updatedActivation)
+           #print(resp[0],resp[1])
+           leftSpeed = (1-resp[0])/2
+           rightSpeed = (1-resp[1])/2
+           robot.setRightSpeed(leftSpeed)
+           robot.setLeftSpeed(rightSpeed)
            #print("Received motor response") 
            sig_act.set_ydata(updatedActivation)
            act.set_ydata(u)
@@ -208,7 +217,7 @@ if __name__ == '__main__':
     while(1):
        blocks = list() 
        #print("getting new blocks")
-       blocks = imgprocess.getPixyBlocks()
+       #blocks = imgprocess.getPixyBlocks()
        #print("Got new blocks")
        #print(blocks)
        totalInput = 0
@@ -221,7 +230,9 @@ if __name__ == '__main__':
                xpos = block[2]-159.5
                try:
                    print("Capturing frame")
-                   frame = imgprocess.acquisition(block[2],block[3])
+                   #frame = imgprocess.acquisition(block[2],block[3])
+                   
+                   print(frame)
                    #cv2.imshow('Test image',frame)
                    #cv2.waitKey()
 

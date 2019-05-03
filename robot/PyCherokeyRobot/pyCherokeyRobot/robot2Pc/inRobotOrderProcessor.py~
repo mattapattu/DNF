@@ -1,0 +1,56 @@
+from pyCherokeyRobot.CherokeyRobotInterface import *
+
+from socket import *
+
+class InRobotOrderProcessor(CherokeyRobotInterface):
+
+    def __init__(self, HOST = '', PORT = 5638):
+        self.HOST = HOST
+        self.PORT = PORT
+        self.s = None
+        self.msgLoop()
+           
+    def __del__(self):
+        print("Byebye my brain!")
+        self.unconnect()
+
+    def connect(self):
+        self.s = socket(AF_INET, SOCK_STREAM)
+        try:
+            self.s.connect((self.HOST, self.PORT))
+        except OSError as msg:
+            #print(msg)
+            self.unconnect()
+       
+
+    def unconnect(self):
+        if not (self.s is None) :
+            self.s.close()
+        self.s = None 
+
+    def msgLoop(self):
+        
+        while True:
+            if self.s is None:
+                print("Looking for a robot brain...")
+                while self.s is None:
+                    self.connect()
+                print("Robot brain connected!")
+            else:
+                data = self.s.recv(1024)
+                if not data:
+                    self.unconnect()
+                else:
+                    print('Received {}'.format(repr(data)))
+        
+    def setRightSpeed(self, speed):
+        pass
+    
+    
+    def setLeftSpeed(self, speed):
+        pass
+        
+    
+
+
+

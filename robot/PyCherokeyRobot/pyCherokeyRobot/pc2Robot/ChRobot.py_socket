@@ -1,0 +1,32 @@
+
+from pyCherokeyRobot.CherokeyRobotInterface import *
+
+import rpyc
+
+class ChRobot(CherokeyRobotInterface):
+
+    def __init__(self, HOST = '', PORT = 5638):
+
+        self.s = socket(AF_INET, SOCK_STREAM)
+        self.s.bind((HOST, PORT))
+        self.s.listen(1)
+        print("Waitting robot body connection...")
+        self.conn, self.addr = self.s.accept()
+        print("Body found!")
+        self.conn.sendall(b'Hi body!')
+
+    def __del__(self):
+        print("Byebye Robot!")
+        self.s.close()
+        self.s = None
+    
+    def setRightSpeed(self, speed):
+        pass
+    
+    
+    def setLeftSpeed(self, speed):
+        pass
+
+        
+    
+
