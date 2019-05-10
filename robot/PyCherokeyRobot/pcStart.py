@@ -3,17 +3,18 @@ from pyCherokeyRobot.pc2Robot.ChRobot import *
 import time
 
 def main():
-    robot = ChRobot(HOST="raspberrypi.local")
+    robot = ChRobot(HOST="192.168.137.254")
 
-    robot.setRightSpeed(0.1)
-    robot.setLeftSpeed(0.1)
-    
+    robot.setRightSpeed(0.40)
+    robot.setLeftSpeed(0.30)
+
     time.sleep(2)
+
+    #robot.setRightSpeed(0.45)
+    #robot.setLeftSpeed(0.27)
     
-    robot.setRightSpeed(0.99)
-    robot.setLeftSpeed(0.99)
+    time.sleep(5)
     
-    time.sleep(2)
 
     robot.setRightSpeed(0.5)
     robot.setLeftSpeed(0.5)

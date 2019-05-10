@@ -1,5 +1,8 @@
 
-from robot.PyCherokeyRobot.pyCherokeyRobot.CherokeyRobotInterface import *
+#from robot.PyCherokeyRobot.pyCherokeyRobot.CherokeyRobotInterface import *
+import sys
+sys.path.append('/home/mattapattu/DNF/robot/PyCherokeyRobot/pyCherokeyRobot')
+from CherokeyRobotInterface import *
 
 import rpyc
 
@@ -20,6 +23,7 @@ class ChRobot(CherokeyRobotInterface):
     def setLeftSpeed(self, speed):
         self.c.root.setLeftSpeed(speed)
 
-        
+    def getPixyBlocks(self) :
+        return self.c.root.getBlocks()
     
 

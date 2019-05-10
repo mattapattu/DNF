@@ -1,9 +1,18 @@
 #!/usr/bin/bin/env python
+import math
 
-import numpy as np
+a = list()
+for i in range(0, 100):  
+    a.append((1,20000))
+    print 1,20000
+for i in range(100,150):
+    a.append((1,100))
+    print 1,100
+for i in range(150,160):
+    a.append((1,1))
+    print 2,1
 
-i = 6364 
-for x in range(0,160):
- #print i, x
- print 160-x,i 
- i = i-40
+#print(a)
+for item in a[::-1]:
+        print item[1], item[0]
+

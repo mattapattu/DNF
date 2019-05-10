@@ -4,13 +4,14 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+#matplotlib.use('Agg')
 from numpy.fft import fft,ifft,fft2,ifft2,fftshift,ifftshift
 from inputDNF_1D import *
 from pylab import *
 import operator
 from collections import defaultdict
 from time import sleep
-import processImage.PIXY_MLP_enregistrement as imgprocess
+#import processImage.PIXY_MLP_enregistrement as imgprocess
 #import pixy.build.libpixyusb_swig.pixy as pixy1
 from mlp import *
 from robot.PyCherokeyRobot.pyCherokeyRobot.pc2Robot.ChRobot import *
@@ -49,7 +50,7 @@ def motorResponse(inputDNFActivation):
     #
     
     #print(inputDNFActivation)
-    layer1 = NeuronLayer("weightsDNFtoMotor.txt",320,2) #784+1 bias
+    layer1 = NeuronLayer("weightsNew.txt",320,2) #784+1 bias
 
     # Creation layer 2 (10 neurons, each with 301 inputs) ==> OUTPUT LAYER
     layer2 = NeuronLayer("motorneuronoutput.txt",2, 1)#300+1 bias
@@ -61,7 +62,7 @@ def motorResponse(inputDNFActivation):
     # we get the entries in the.txt file
     
     neural_network.feedForward(inputDNFActivation)
-    neural_network.print_output()
+    #neural_network.print_output()
     return neural_network.return_output()
 
     
@@ -72,7 +73,7 @@ def f(x, threshold_f):
         `threshold_f` : sigmoidal function threshold, the values below
                         it returns 0.0
     '''
-    beta = 1.0    # slope of the sigmoidal function
+    beta = 100.0    # slope of the sigmoidal function
     if np.all(x < threshold_f):          ##### !!!!!!!!!!!!!   change from "<=" to "<"
         return x*0.0
     else:
@@ -92,15 +93,20 @@ def f(x, threshold_f):
 def w(x):      # in the shape of a Mexican hat ! ;)
     ''' convolution nucleus: difference of Gaussian '''
             #print "mqslkdfjqmslfjkmslqfjkmslqfjkmslqfjslqfjsqlfmslqfjm \n"
-#    c_exc =  5.0         # amplitude of the excitation part
-#    c_inh =  4.65         # amplitude of the inhibition part
-#    sigma_exc = 1.0      # width of the excitation part  ! >0
-#    sigma_inh = 30.0      # width of the inhibition part  ! >0
+    #c_exc =  8.0         # amplitude of the excitation part
+    #c_inh =  4.65         # amplitude of the inhibition part
+    #sigma_exc = 1.0      # width of the excitation part  ! >0
+    #sigma_inh = 60.0      # width of the inhibition part  ! >0
             
-    c_exc =  5.0         # amplitude of the excitation part
-    c_inh =  4.0         # amplitude of the inhibition part
-    sigma_exc = 1.0      # width of the excitation part  ! >0
-    sigma_inh = 100.0      # width of the inhibition part  ! >0
+    #c_exc =  4.0         # amplitude of the excitation part
+    #c_inh =  2.0         # amplitude of the inhibition part
+    #sigma_exc = 1.0      # width of the excitation part  ! >0
+    #sigma_inh = 60.0      # width of the inhibition part  ! >0
+
+    c_exc =  7.0         # amplitude de la partie excitatrice
+    c_inh =  5.1         # amplitude de la partie inhibitrice
+    sigma_exc = 1.0      # largeur de la partie excitatrice  ! >0
+    sigma_inh = 61.0
 
     return c_exc * np.exp(-x**2/(2*sigma_exc**2)) - c_inh * np.exp(-x**2/(2*sigma_inh**2))
 
@@ -134,7 +140,7 @@ if __name__ == '__main__':
 
     #Paramètres DNF
     h = -0.8         # DNF rest threshold in the absence of an input
-    tau = 2.0        # synaptic time constant
+    tau = 0.5        # synaptic time constant
     threshold = 0.0  # sigmoid function activation threshold
 
 
@@ -149,7 +155,9 @@ if __name__ == '__main__':
     #print len(W)
 
     ### Start the robot
-    #robot = ChRobot(HOST="raspberrypi.local")
+    robot = ChRobot(HOST="192.168.137.254")
+    robot.setRightSpeed(0.5)
+    robot.setLeftSpeed(0.5)
     
     #Rest threshold, activation threshold and initialization of the population's potential
     H = np.ones(len(X)) * h
@@ -183,7 +191,7 @@ if __name__ == '__main__':
     
     def updateDNF(inputs,u):
        print("Updating DNF") 
-       for i in range(0,30):
+       for i in range(0,50):
            Fu_fft = fft(f(u, threshold))  # fft pour la convolution
            L = W_fft * Fu_fft             # convolution
            L = ifft(L).real
@@ -192,22 +200,57 @@ if __name__ == '__main__':
 #             input = shiftRight(input, shift)
            u += du
            updatedActivation = f(u,threshold)
+           #print("updated activation u = ", updatedActivation)
            #print("Waiting for motor response") 
            resp = motorResponse(updatedActivation)
-           #print(resp[0],resp[1])
-           leftSpeed = (1-resp[0])/2
-           rightSpeed = (1-resp[1])/2
-           robot.setRightSpeed(leftSpeed)
-           robot.setLeftSpeed(rightSpeed)
+           print(resp[0],resp[1])
+           speedDiff = abs(resp[0]-resp[1]) 
+           turnLeft = False
+           if resp[0] < resp [1]:
+                   turnLeft = True 
+           print("Diff between left & right speeds is :",speedDiff)
+           print("turnLeft is :", turnLeft)
+
+           if speedDiff < 100 and turnLeft:
+               leftSpeed = 0.35
+               rightSpeed = 0.40
+           elif speedDiff < 100 and not turnLeft:
+               leftSpeed = 0.40
+               rightSpeed =  0.35
+           elif speedDiff > 100 and speedDiff < 9000 and turnLeft:
+               leftSpeed = 0.40
+               rightSpeed = 0.30
+           elif speedDiff > 100 and speedDiff < 9000 and not turnLeft:
+               leftSpeed = 0.30
+               rightSpeed = 0.40
+           elif speedDiff >= 9000 and turnLeft:
+               leftSpeed = 0.45
+               rightSpeed = 0.30
+           elif speedDiff >= 9000 and not turnLeft:
+               leftSpeed = 0.30
+               rightSpeed = 0.45
+           #print(np.unique(updatedActivation).size)
+           if np.unique(updatedActivation).size == 1:
+               robot.setRightSpeed(0.5)
+               robot.setLeftSpeed(0.5)
+               print(0.5,0.5)
+           else:
+               print(leftSpeed,rightSpeed)
+               robot.setRightSpeed(leftSpeed)
+               robot.setLeftSpeed(rightSpeed)
            #print("Received motor response") 
            sig_act.set_ydata(updatedActivation)
            act.set_ydata(u)
            plt.draw()
            #print("update plots")
-       plt.show()    
-       #print("show updated plots")
-#           draw()
-       pause(2)
+       #sig_act.set_ydata(updatedActivation)
+       #act.set_ydata(u)
+       #plt.draw()
+       plt.show()
+       
+       pause(0.1)
+       robot.setRightSpeed(0.5)
+       robot.setLeftSpeed(0.5)
 #       show()    
            
 #    input1 = I0*gaussian(X, mu=m-20, sigma=sigma)
@@ -217,9 +260,9 @@ if __name__ == '__main__':
     while(1):
        blocks = list() 
        #print("getting new blocks")
-       #blocks = imgprocess.getPixyBlocks()
+       blocks = robot.getPixyBlocks()
        #print("Got new blocks")
-       #print(blocks)
+       print(blocks)
        totalInput = 0
        blockcount = blockcount+1
        if blocks is not None:
@@ -228,22 +271,25 @@ if __name__ == '__main__':
                count = count+1
                print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block[0], block[1], block[2], block[3], block[4], block[5]))
                xpos = block[2]-159.5
-               try:
-                   print("Capturing frame")
+       #        try:
+       #            print("Capturing frame")
                    #frame = imgprocess.acquisition(block[2],block[3])
                    
-                   print(frame)
+                   #print(frame)
                    #cv2.imshow('Test image',frame)
                    #cv2.waitKey()
 
-               except ValueError as e:
-                   print("Exception thrown - ",e.args)
+       #        except ValueError as e:
+        #           print("Exception thrown - ",e.args)
                    
                ## Send frame to CNN
                ## Get response from CNN and if true, add input to totalinput
                
                #print("add to total input")
-               totalInput = totalInput + (block[4]*block[5])/300* gaussian(X,mu=xpos,sigma=sigma)
+               totalInput = totalInput + (block[4]*block[5])* gaussian(X,mu=xpos,sigma=sigma)
            updateDNF(totalInput,u) 
-           #print("updated DNF")
+       else :
+           totalInput = np.zeros(320,)
+        #   print("Updating DNF with empty input")
+           updateDNF(totalInput,u)     
         

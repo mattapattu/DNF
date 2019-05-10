@@ -93,7 +93,7 @@ class NeuralNetwork():
 
     # transfer function used in Lyes MLP C++ work
     def __transfertFunction(self, x):
-        return np.tanh(1*x/1000);
+        return np.tanh(x/1000);
     
      # transfer function used in Lyes MLP C++ work
     def __transfertFunction1(self, x):
@@ -104,32 +104,34 @@ class NeuralNetwork():
 
         
         #### f( Inputs)
-        dnfNeuronActivation = self.__transfertFunction(inputs)
+        dnfNeuronActivation = inputs
         #print(dnfNeuronActivation)
         #### Dot product of DNF_TO_MOTOR weights &  dnfNeuronActivation
         #print("self.layer1.synaptic_weights", self.layer1.synaptic_weights)            
         dotproduct_layer1 = np.dot(self.layer1.synaptic_weights,dnfNeuronActivation)
         #print("dotproduct_layer1: ",dotproduct_layer1)
         #####f(dot product)
-        output_from_layer1 = self.__transfertFunction(dotproduct_layer1)
-        self.layer1.layer_output = output_from_layer1
-        #print("output_from_layer1: ", output_from_layer1)
+        #output_from_layer1 = self.__transfertFunction(dotproduct_layer1)
+        self.layer1.layer_output = dotproduct_layer1
+        #print("output_from_layer1: ", self.layer1.layer_output)
         
 
         
-        output_from_layer2 = self.__transfertFunction1(output_from_layer1)
-        self.layer2.layer_output = output_from_layer2
+        #output_from_layer2 = self.__transfertFunction1(output_from_layer1)
+        self.layer2.layer_output = self.layer1.layer_output
         #print("output_from_layer2: ",output_from_layer2)
 
-        return output_from_layer2
+        return self.layer2.layer_output
 
     # display only of the network output
     def print_output(self):
         print (" Output of the output layer: ")
-        print ([round(x,2) for x in self.layer2.layer_output])
+        #print ([round(x,2) for x in self.layer2.layer_output])
+        print(self.layer2.layer_output)
         
     def return_output(self):
-        return [round(x,2) for x in self.layer2.layer_output]
+        return self.layer2.layer_output
+        #return [round(x,2) for x in self.layer2.layer_output]
 
     # search for the max, display of the recognized number with percentage of
     #Recognition # (output layer)
