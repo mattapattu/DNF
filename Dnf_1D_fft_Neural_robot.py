@@ -93,20 +93,16 @@ def f(x, threshold_f):
 def w(x):      # in the shape of a Mexican hat ! ;)
     ''' convolution nucleus: difference of Gaussian '''
             #print "mqslkdfjqmslfjkmslqfjkmslqfjkmslqfjslqfjsqlfmslqfjm \n"
-    #c_exc =  8.0         # amplitude of the excitation part
-    #c_inh =  4.65         # amplitude of the inhibition part
-    #sigma_exc = 1.0      # width of the excitation part  ! >0
-    #sigma_inh = 60.0      # width of the inhibition part  ! >0
-            
-    #c_exc =  4.0         # amplitude of the excitation part
-    #c_inh =  2.0         # amplitude of the inhibition part
-    #sigma_exc = 1.0      # width of the excitation part  ! >0
-    #sigma_inh = 60.0      # width of the inhibition part  ! >0
 
+#    c_exc =  7.0         # amplitude de la partie excitatrice
+#    c_inh =  5.1         # amplitude de la partie inhibitrice
+#    sigma_exc = 1.0      # largeur de la partie excitatrice  ! >0
+#    sigma_inh = 61.0
+     
     c_exc =  7.0         # amplitude de la partie excitatrice
-    c_inh =  5.1         # amplitude de la partie inhibitrice
+    c_inh =  6.9         # amplitude de la partie inhibitrice
     sigma_exc = 1.0      # largeur de la partie excitatrice  ! >0
-    sigma_inh = 61.0
+    sigma_inh = 65.0
 
     return c_exc * np.exp(-x**2/(2*sigma_exc**2)) - c_inh * np.exp(-x**2/(2*sigma_inh**2))
 
@@ -140,7 +136,7 @@ if __name__ == '__main__':
 
     #Paramètres DNF
     h = -0.8         # DNF rest threshold in the absence of an input
-    tau = 0.5        # synaptic time constant
+    tau = 2.0        # synaptic time constant
     threshold = 0.0  # sigmoid function activation threshold
 
 
@@ -286,7 +282,7 @@ if __name__ == '__main__':
                ## Get response from CNN and if true, add input to totalinput
                
                #print("add to total input")
-               totalInput = totalInput + (block[4]*block[5])* gaussian(X,mu=xpos,sigma=sigma)
+               totalInput = totalInput + (block[4]*block[5]/600)* gaussian(X,mu=xpos,sigma=sigma)
            updateDNF(totalInput,u) 
        else :
            totalInput = np.zeros(320,)
