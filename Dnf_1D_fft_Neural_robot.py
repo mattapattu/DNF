@@ -1,4 +1,4 @@
-#!/usr/bin/en
+#!/usr/bin/env
 # -*- coding: utf-8 -*-
 
 import sys
@@ -44,8 +44,18 @@ where # u(x,t) is the potential of a neural population at position x and time t
 global peakOfActivation
 global xmax
 global totalInput
+global input_size
+global input_location
+global xmax_displacement
+global speedofwheels
+
 peakOfActivation=0.0
 xmax = 0
+input_size = list()
+input_location = list()
+xmax_displacement = list()
+speedofwheels = list()
+
 
 def connectToSpiky():
     global spinnTrue
@@ -85,11 +95,12 @@ def setupSpiky(child,child1):
     time.sleep(2)
     return child, child1
 
-  
+current_milli_time = lambda: int(round(time.time() * 1000)) 
+
 def motorResponse(inputDNFActivation):
      # Creation layer 1 (300 neurons, each with 785 inputs) ==> HIDDEN LAYER
     #
-    
+    t = current_milli_time()
     #print(inputDNFActivation)
     layer1 = NeuronLayer("weightsNew.txt",320,2) #784+1 bias
 
@@ -104,11 +115,14 @@ def motorResponse(inputDNFActivation):
     
     neural_network.feedForward(inputDNFActivation)
     #neural_network.print_output()
+    t_new = current_milli_time()
+    exec_time = t_new-t
+    #print("exec_time is ",exec_time)
     return neural_network.return_output()
 
 def motorResponseFromSpinnaker(inputDNFActivation,child,child1):
 
-    print "Inside motorReponse From Spinnaker"    
+    #print "Inside motorReponse From Spinnaker"    
     leftSpeed = 0.5
     rightSpeed = 0.5
     #print inputDNFActivation
@@ -117,57 +131,67 @@ def motorResponseFromSpinnaker(inputDNFActivation,child,child1):
     if inputpixels[0].size:
         #str1 = " ".join(inputpixels[0]) 
         str1 = ' '.join(map(str, inputpixels[0]))
-        print (str1)
+        #print (str1)
         #print "Sending input to spiky"
         #child.sendcontrol('j')
         try :
             child.expect('Input neurons to spike')
+            #print("Found input pattern1", child.after)
+            if child.before:
+                child.expect (r'.+')
         except pexpect.exceptions.TIMEOUT:
-            child.send('\r\n')
-            child.expect('Input neurons to spike')
+            #child.sendline('\r\n')
+            #child.expect('Input neurons to spike')
+            print("No input pattern found, stop robot")
+            return leftSpeed,rightSpeed
 
+        #temp = child.before
+        
         child.sendline(str1)
+        #print("Send input pattern ", str1)
+        child.sendline('')
         child.sendcontrol('j')
         child1.sendcontrol('j')
-        child1.expect('Received spikes from population')
+        #child1.expect('Received spikes from population')
         #print child1.after
         try:
-            print "Looking for neuron rates"
+            #print "Looking for neuron rates"
+            child1.expect('Received spikes from population',timeout =1)
             child1.expect(r'neuron0 rate =  \d+\.\d+',timeout=1)
             line = child1.after
-            print ('line is: ',line)
+            #print ('line is: ',line)
 
             #pattern = re.compile("neuron0 rate =  (\d+\.\d+).*neuron1 rate =  (\d+\.\d+).*neuron2 rate =  (\d+\.\d+).*neuron3 rate =  (\d+\.\d+).*neuron4 rate =  (\d+\.\d+).*neuron5 rate =  (\d+\.\d+)")
             x1 = re.match("neuron0 rate =  (\d+\.\d+)",line)
 
             child1.expect(r'neuron1 rate =  \d+\.\d+',timeout=1)
             line = child1.after
-            print ('line is: ',line)
+            #print ('line is: ',line)
             x2 = re.match("neuron1 rate =  (\d+\.\d+)",line)
     
             child1.expect(r'neuron2 rate =  \d+\.\d+',timeout=1)
             line = child1.after
-            print ('line is: ',line)
+            #print ('line is: ',line)
             x3 = re.match("neuron2 rate =  (\d+\.\d+)",line)
 
             child1.expect(r'neuron3 rate =  \d+\.\d+',timeout=1)
             line = child1.after
-            print ('line is: ',line)
+            #print ('line is: ',line)
             x4 = re.match("neuron3 rate =  (\d+\.\d+)",line)
 
             child1.expect(r'neuron4 rate =  \d+\.\d+',timeout=1)
             line = child1.after
-            print ('line is: ',line)
+            #print ('line is: ',line)
             x5 = re.match("neuron4 rate =  (\d+\.\d+)",line)
 
             child1.expect(r'neuron5 rate =  \d+\.\d+',timeout=1)
             line = child1.after
-            print ('line is: ',line)
+            #print ('line is: ',line)
             x6 = re.match("neuron5 rate =  (\d+\.\d+)",line)
 
                    
             if x1 and x2 and x3 and x4 and x5 and x6:
-                print("Pattern matched")
+                #print("Pattern matched")
                 x1rate = x1.group(1)
                 x2rate = x2.group(1)
                 x3rate = x3.group(1)
@@ -175,9 +199,9 @@ def motorResponseFromSpinnaker(inputDNFActivation,child,child1):
                 x5rate = x4.group(1)
                 x6rate = x5.group(1)
 
-                print(x1rate,x2rate,x3rate,x4rate,x5rate,x6rate)
+                #print(x1rate,x2rate,x3rate,x4rate,x5rate,x6rate)
                 maxval = max(x1rate,x2rate,x3rate,x4rate,x5rate,x6rate)
-                print "maxval is ",maxval
+                #print "maxval is ",maxval
 
                 if x1rate == maxval :
                     leftSpeed = 0.45
@@ -192,11 +216,11 @@ def motorResponseFromSpinnaker(inputDNFActivation,child,child1):
                     leftSpeed = 0.35
                     rightSpeed = 0.35
                 elif x5rate == maxval :
-                    leftSpeed = 0.41
-                    rightSpeed = 0.32
+                    leftSpeed = 0.32
+                    rightSpeed = 0.41
                 elif x6rate == maxval :
-                    leftSpeed = 0.41
-                    rightSpeed = 0.32
+                    leftSpeed = 0.30
+                    rightSpeed = 0.45
                 else:
                     leftSpeed = 0.5
                     rightSpeed = 0.5
@@ -207,7 +231,7 @@ def motorResponseFromSpinnaker(inputDNFActivation,child,child1):
             leftSpeed = 0.5
             rightSpeed = 0.5
             #   else:
-    print("Returning speeds:",leftSpeed,rightSpeed)
+    #print("Returning speeds:",leftSpeed,rightSpeed)
 
     return leftSpeed,rightSpeed   
 
@@ -225,13 +249,15 @@ def f(x, threshold_f):
     
     global peakOfActivation
     global xmax
-    
+     
     xmax1,peak1 = max(enumerate(fval), key=operator.itemgetter(1))
 
     if(peak1 >= peakOfActivation):
         xmax, peakOfActivation = xmax1,peak1
         xmax = xmax-159.5
         #print("New peak=%f xmax=%i" % (peakOfActivation,xmax))
+    t = current_milli_time()    
+    xmax_displacement.append([abs(xmax),t])
 
     return fval   
 
@@ -281,7 +307,7 @@ if __name__ == '__main__':
 
     #Paramètres DNF
     h = -0.8         # DNF rest threshold in the absence of an input
-    tau = 2.0        # synaptic time constant
+    tau = 0.1        # synaptic time constant
     threshold = 0.0  # sigmoid function activation threshold
 
 
@@ -323,7 +349,7 @@ if __name__ == '__main__':
     global totalInput
     totalInput = 0.0001*gaussian(X,mu=0,sigma=sigma)
     #Initialization of the figure ##¡!!!!!!!!!!!!!!!!!!! HOW TO SUPERIMPOSE SEVERAL CURVES !!!!!!!!!!
-    fig = plt.figure()
+    fig = plt.figure(1)
     #inp1, =  plt.plot(X, input1)
     inp, = plt.plot(X, totalInput,label='input')                # input
     #rest, = plot(X, H)                  # rest threshold ('resting level')
@@ -335,6 +361,7 @@ if __name__ == '__main__':
     #axis settings
     plt.ylim(-6,10)           # forces the min and max of y
     plt.legend()
+    
 
 # Assumption 1: All targets are of same size but at different distances #######################       
 # Assumption 2: Currently activated target will always have the largest size in pixy o/p until target is brought ######
@@ -345,7 +372,7 @@ if __name__ == '__main__':
     
     def updateDNF(inputs,u):
        print("Updating DNF") 
-       for i in range(0,50):
+       for i in range(0,10):
            Fu_fft = fft(f(u, threshold))  # fft pour la convolution
            L = W_fft * Fu_fft             # convolution
            L = ifft(L).real
@@ -355,9 +382,10 @@ if __name__ == '__main__':
            u += du
            updatedActivation = f(u,threshold)
            #print("updated activation u = ", updatedActivation)
-           '''
+           
            if spinnTrue is True:
                leftSpeed,rightSpeed = motorResponseFromSpinnaker(updatedActivation,child,child1)
+               time.sleep(0.1)
            else:
                resp = motorResponse(updatedActivation)
                speedDiff = abs(resp[0]-resp[1])
@@ -392,8 +420,9 @@ if __name__ == '__main__':
                print(leftSpeed,rightSpeed)
                robot.setRightSpeed(leftSpeed)
                robot.setLeftSpeed(rightSpeed)
+           t = current_milli_time()
+           speedofwheels.append([leftSpeed,rightSpeed,t])
            #print("Received motor response") 
-           '''
            sig_act.set_ydata(updatedActivation)
            act.set_ydata(u)
            plt.draw()
@@ -401,38 +430,6 @@ if __name__ == '__main__':
        #sig_act.set_ydata(updatedActivation)
        #act.set_ydata(u)
        #plt.draw()
-       if spinnTrue is True:
-           leftSpeed,rightSpeed = motorResponseFromSpinnaker(updatedActivation,child,child1)
-       else:
-           resp = motorResponse(updatedActivation)
-           speedDiff = abs(resp[0]-resp[1])
-           turnLeft = False
-           if resp[0] < resp [1]:
-               turnLeft = True
-           if speedDiff < 100 and turnLeft:
-               leftSpeed = 0.35
-               rightSpeed = 0.35
-           elif speedDiff < 100 and not turnLeft:
-               leftSpeed = 0.35
-               rightSpeed =  0.35
-           elif speedDiff > 100 and speedDiff < 9000 and turnLeft:
-               leftSpeed = 0.41
-               rightSpeed = 0.32
-           elif speedDiff > 100 and speedDiff < 9000 and not turnLeft:
-               leftSpeed = 0.32
-               rightSpeed = 0.41
-           elif speedDiff >= 9000 and turnLeft:
-               leftSpeed = 0.45
-               rightSpeed = 0.30
-           elif speedDiff >= 9000 and not turnLeft:
-               leftSpeed = 0.30
-               rightSpeed = 0.45
-           if np.unique(updatedActivation).size == 1:
-              robot.setRightSpeed(0.5)
-              robot.setLeftSpeed(0.5)
-              print(0.5,0.5)
-           else:
-              print(leftSpeed,rightSpeed)
        robot.setRightSpeed(leftSpeed)
        robot.setLeftSpeed(rightSpeed)
 
@@ -447,26 +444,65 @@ if __name__ == '__main__':
 #    input2 = I0*gaussian(X, mu=m+20, sigma=sigma)
 #    input = input1 + input2    
     blockcount=0    
+    start_time  =  current_milli_time()
     while(1):
+       t = current_milli_time() 
        blocks = list() 
        #print("getting new blocks")
        blocks = robot.getPixyBlocks()
-       #print("Got new blocks")
+       #print("Get new blocks")
        print(blocks)
        totalInput = 0
        blockcount = blockcount+1
        if blocks is not None:
+           print("Get new blocks")
            count = 0
            for block in blocks:
                count = count+1
                print('[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (block[0], block[1], block[2], block[3], block[4], block[5]))
                xpos = block[2]-159.5
                totalInput = totalInput + (block[4]*block[5]/110)* gaussian(X,mu=xpos,sigma=sigma)
+               t = current_milli_time()
+               input_size.append([block[4]*block[5],t])
+               input_location.append([xpos,t])
            updateDNF(totalInput,u) 
        else :
            totalInput = np.zeros(320,)
         #   print("Updating DNF with empty input")
            updateDNF(totalInput,u)     
+       if t-start_time >= 10000:
+           break
 
- 
 
+    arr = np.array(speedofwheels)
+    #arr = arr[:,None]
+    #print(arr.shape)
+    plt.figure(2)
+    plt.subplot(414)
+    plt.plot(arr[:,2],arr[:,[0,1]])
+    plt.xlabel('time (ms)')
+    plt.ylabel('speed of wheels')
+
+    arr = np.array(input_size)
+    #arr = arr[:,None]
+    plt.subplot(411)
+    plt.plot(arr[:,1],arr[:,0])
+    plt.xlabel('time (ms)')
+    plt.ylabel('input size')
+     
+    arr = np.array(input_location)
+    #arr = arr[:,None]
+    plt.subplot(412)
+    plt.plot(arr[:,1],arr[:,0])
+    plt.xlabel('time (ms)')
+    plt.ylabel('input location')
+
+    arr = np.array(xmax_displacement)
+    #arr = arr[:,None]
+    plt.subplot(413)
+    plt.plot(arr[:,1],arr[:,0])
+    plt.xlabel('time (ms)')
+    plt.ylabel('xmax displacement')
+
+    plt.show()
+    plt.pause(10)
